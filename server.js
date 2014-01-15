@@ -1,10 +1,11 @@
-var zlib = require('zlib');
 var url = require('url');
 var domain = require('domain');
-var builder = require('./browser-builder');
-var _ = require('underscore');
+
 var express = require('express');
 
+var Builder = require('./browser-builder');
+
+var libPaths = {};
 var port = process.argv[2] || process.env.PORT || 8080;
 
 function domainHandler(request, response, callback) {
@@ -17,24 +18,31 @@ function domainHandler(request, response, callback) {
   }).run(function() { callback(dom) });
 }
 
-function buildSDK(request, response, options) {
+function buildSDK(request, response) {
   domainHandler(request, response, function(dom) {
+    var version = request.params[0];
+    var libPath = libPaths[version];
+    if (!libPath) {
+      var message = 'Unsupported SDK version ' + version;
+      response.writeHead(400, message, {'content-type': 'text/plain'});
+      response.end(message);
+      return;
+    }
+
+    var minify = request.params[1] || false;
     var query = url.parse(request.url).query;
     if (query) query = query.replace(/=?&/g, ',').replace(/=/, '-');
-    options = _.defaults(options || {}, { stream: null, minify: true });
 
-    builder(query, options, function (err, stream) {
+    new Builder({cache: true, minify: minify, libPath: libPath}).
+                addServices(query).build(function (err, code) {
       if (err) return dom.emit('error', err);
 
       response.setHeader('content-type', 'text/javascript');
       response.writeHead(200);
-      stream.pipe(response);
+      response.write(code);
+      response.end();
     });
   });
-}
-
-function buildUnminifiedSDK(req, res) {
-  buildSDK(req, res, { minify: false });
 }
 
 var app = express();
@@ -43,14 +51,15 @@ app.use(express.favicon());
 if (require.main === module) {
   app.use(express.logger()); // enable logging only for executable
 }
-app.get('/', buildSDK);
-app.get('/aws-sdk.min.js', buildSDK);
-app.get('/aws-sdk.js', buildUnminifiedSDK);
+app.get(/^\/aws-sdk-(v\d.+?)(\.min)?\.js$/, buildSDK);
 
 module.exports = app;
 
 // run if we called this tool directly
 if (require.main === module) {
-  app.listen(port);
-  console.log('* aws-sdk builder listening on http://localhost:' + port);
+  require('./server-init')(function(_libPaths) {
+    libPaths = _libPaths;
+    app.listen(port);
+    console.log('* aws-sdk builder listening on http://localhost:' + port);
+  });
 }

@@ -1,12 +1,3 @@
-through = require('through')
-fs = require('fs')
-
-stringstream = ->
-  s = through (buf) -> @data = (@data || '') + buf
-  s._stringstream = true
-  s.data = ''
-  s
-
 evalCode = (code, preamble) ->
   eval """
     (function() {
@@ -18,5 +9,5 @@ evalCode = (code, preamble) ->
 
 module.exports =
   AWS: require('../../lib/aws')
+  Builder: require('../browser-builder')
   evalCode: evalCode
-  stringstream: stringstream
