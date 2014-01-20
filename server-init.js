@@ -6,7 +6,7 @@ var https = require('https');
 
 var Builder = require('./browser-builder');
 
-function init(cb) {
+function init(cache, cb) {
   var versions = fs.readFileSync(__dirname + '/server-versions.txt');
   versions = versions.toString().split(/\r?\n/).filter(function(v) {
     return v && v.length > 0;
@@ -22,19 +22,27 @@ function init(cb) {
     downloadVersion(version, function() {
       var libPath = __dirname + '/sdks/' + version;
       libPaths[version] = libPath;
-      new Builder({cache: true, minify: true, libPath: libPath}).addServices('all').build(function() {
-        console.log('* Built minified ' + version);
 
-        new Builder({cache: true, libPath: libPath}).addServices('all').build(function() {
-          console.log('* Built unminified ' + version);
+      if (cache) {
+        new Builder({cache: true, minify: true, libPath: libPath}).addServices('all').build(function() {
+          console.log('* Built minified ' + version);
 
-          numLoaded++;
+          new Builder({cache: true, libPath: libPath}).addServices('all').build(function() {
+            console.log('* Built unminified ' + version);
 
-          if (numLoaded >= versions.length) {
-            cb(libPaths);
-          }
+            numLoaded++;
+
+            if (numLoaded >= versions.length) {
+              cb(libPaths);
+            }
+          });
         });
-      });
+      } else {
+        numLoaded++;
+        if (numLoaded >= versions.length) {
+          cb(libPaths);
+        }
+      }
     });
   });
 }
