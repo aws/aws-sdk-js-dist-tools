@@ -5,7 +5,6 @@ var express = require('express');
 
 var Builder = require('./browser-builder');
 
-var libPaths = {};
 var port = process.argv[2] || process.env.PORT || 8080;
 
 function domainHandler(request, response, callback) {
@@ -21,7 +20,8 @@ function domainHandler(request, response, callback) {
 function buildSDK(request, response) {
   domainHandler(request, response, function(dom) {
     var version = request.params[0];
-    var libPath = libPaths[version];
+    var libPath = request.app.get('libPaths')[version];
+    var cache = request.app.get('cache');
     if (!libPath) {
       var message = 'Unsupported SDK version ' + version;
       response.writeHead(400, message, {'content-type': 'text/plain'});
@@ -33,7 +33,7 @@ function buildSDK(request, response) {
     var query = url.parse(request.url).query;
     if (query) query = query.replace(/=?&/g, ',').replace(/=/, '-');
 
-    new Builder({cache: true, minify: minify, libPath: libPath}).
+    new Builder({cache: cache, minify: minify, libPath: libPath}).
                 addServices(query).build(function (err, code) {
       if (err) return dom.emit('error', err);
 
@@ -57,8 +57,9 @@ module.exports = app;
 
 // run if we called this tool directly
 if (require.main === module) {
-  require('./server-init')(function(_libPaths) {
-    libPaths = _libPaths;
+  require('./server-init')(cache, function(libPaths) {
+    app.set('libPaths', libPaths);
+    app.set('cache', process.env.NO_CACHE ? false : true);
     app.listen(port);
     console.log('* aws-sdk builder listening on http://localhost:' + port);
   });

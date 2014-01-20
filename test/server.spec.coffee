@@ -3,13 +3,18 @@ express = require('express')
 server = require('../server')
 helpers = require('./helpers')
 
+paths = {}
+paths['v' + helpers.AWS.VERSION] = __dirname + '/../../'
+server.set('libPaths', paths)
+server.set('cache', false)
+
 describe 'bundle server routes', ->
   route = null
   beforeEach -> route = '/'
   get = -> request(server).get(route)
 
-  describe '/aws-sdk.js', ->
-    beforeEach -> route = '/aws-sdk.js'
+  describe '/aws-sdk-v' + helpers.AWS.VERSION + '.js', ->
+    beforeEach -> route = '/aws-sdk-v' + helpers.AWS.VERSION + '.js'
 
     it 'builds unminified SDK', (done) ->
       get().set('Accept-Encoding', '').expect(200).
@@ -38,8 +43,8 @@ describe 'bundle server routes', ->
         expect(res.headers['content-encoding']).toEqual('gzip')
         done(err)
 
-  describe '/aws-sdk.min.js', ->
-    beforeEach -> route = '/aws-sdk.min.js'
+  describe '/aws-sdk-v' + helpers.AWS.VERSION + '.min.js', ->
+    beforeEach -> route = '/aws-sdk-v' + helpers.AWS.VERSION + '.min.js'
 
     it 'builds minified SDK', (done) ->
       get().expect(200).end (err, res) ->
