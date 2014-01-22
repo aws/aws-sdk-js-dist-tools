@@ -57,9 +57,9 @@ module.exports = app;
 
 // run if we called this tool directly
 if (require.main === module) {
-  require('./server-init')(cache, function(libPaths) {
-    app.set('libPaths', libPaths);
-    app.set('cache', process.env.NO_CACHE ? false : true);
+  require('./server-init')(function(result) {
+    app.set('cache', result.cache);
+    app.set('libPaths', result.libPaths);
     app.listen(port);
     console.log('* aws-sdk builder listening on http://localhost:' + port);
   });
