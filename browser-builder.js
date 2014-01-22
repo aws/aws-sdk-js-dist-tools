@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var fs = require('fs');
+var fs = require('graceful-fs');
 var util = require('util');
 
 var browserify = require('browserify');
@@ -35,6 +35,8 @@ Builder.prototype.getRootPath = function() {
 Builder.prototype.setDefaultOptions = function(options) {
   this.options = options || {};
   this.options.libPath = this.options.libPath || this.getRootPath();
+  this.options.cacheRoot = this.options.cacheRoot ||
+    this.options.libPath + '/dist-tools/cache';
   this.options.cache = this.options.cache || false;
   this.options.minify = this.options.minify || false;
   this.options.minifyOptions = this.options.minifyOptions || {compress: false};
@@ -54,7 +56,7 @@ Builder.prototype.setServiceClasses = function() {
 };
 
 Builder.prototype.cachePath = function(path) {
-  var fullPath = this.options.libPath + '/dist-tools/cache';
+  var fullPath = this.options.cacheRoot;
   if (path) {
     fullPath += '/' + path + (this.options.minify ? '.min' : '') + '.js';
   }
