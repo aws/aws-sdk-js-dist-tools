@@ -52,7 +52,7 @@ describe 'Builder', ->
 
     it 'groups multiple errors into one error object', ->
       services = 's3-1999-01-01,invalidmodule,dynamodb-01-01-01'
-      msg = 'Missing modules: s3-1999-01-01, invalidmodule, dynamodb-01-01-01'
+      msg = 'Missing modules: dynamodb-01-01-01, invalidmodule, s3-1999-01-01'
       assertBundleFailed(services, msg)
 
     it 'throws an opaque error if special characters are found (/, ., *)', ->

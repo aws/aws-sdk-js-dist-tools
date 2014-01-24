@@ -15,6 +15,7 @@ function Builder(options) {
   this.setServiceClasses();
   this.code = '';
   this.serviceCode = [];
+  this.builtServices = {};
   this.license = [
     '// AWS SDK for JavaScript v' + this.AWS.VERSION,
     '// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.',
@@ -43,11 +44,17 @@ Builder.prototype.setDefaultOptions = function(options) {
 };
 
 Builder.prototype.loadAWS = function() {
-  this.AWS = require(this.options.libPath + '/lib/aws');
+  try {
+    this.AWS = require(this.options.libPath + '/lib/aws');
+  } catch (e) { // cannot load AWS, allow this if cache is on
+    if (this.options.cache) this.AWS = null;
+    else throw e;
+  }
 }
 
 Builder.prototype.setServiceClasses = function() {
   this.serviceClasses = {};
+  if (!this.AWS) return;
   this.AWS.util.each.call(this, this.AWS, function(name, serviceClass) {
     if (serviceClass.serviceIdentifier) {
       this.serviceClasses[serviceClass.serviceIdentifier] = serviceClass;
@@ -68,40 +75,6 @@ Builder.prototype.cacheExists = function(path) {
   return fs.existsSync(this.cachePath(path));
 };
 
-Builder.prototype.buildServiceMap = function(services) {
-  var self = this, map = {}, invalidModules = [];
-  services.forEach(function(name) {
-    if (name === 'all') {
-      Object.keys(self.serviceClasses).forEach(function(svcName) {
-        var svc = new self.serviceClasses[svcName]();
-        map[svcName] = map[svcName] || {};
-        map[svcName][svc.api.apiVersion] = svc;
-      });
-    } else {
-      var match = name.match(/^(.+?)(?:-(.+?))?$/);
-      var service = match[1], version = match[2];
-      if (self.serviceClasses[service]) {
-        map[service] = map[service] || {};
-        try {
-          var opts = version ? {apiVersion: version} : {};
-          var svc = new self.serviceClasses[service](opts);
-          map[service][svc.api.apiVersion] = svc;
-        } catch (e) {
-          invalidModules.push(service + (version ? '-' + version : ''));
-        }
-      } else {
-        invalidModules.push(service);
-      }
-    }
-  });
-
-  if (invalidModules.length > 0) {
-    throw new Error('Missing modules: ' + invalidModules.join(', '));
-  }
-
-  return map;
-}
-
 Builder.prototype.className = function(api) {
   var name = api.serviceAbbreviation || api.serviceFullName;
   name = name.replace(/^Amazon|AWS\s*|\(.*|\s+|\W+/g, '');
@@ -110,40 +83,62 @@ Builder.prototype.className = function(api) {
   return name;
 };
 
-Builder.prototype.buildService = function(service, versions) {
+Builder.prototype.buildService = function(name) {
   var self = this;
-  var svcPath = self.options.libPath + '/lib/services/' + service + '.js';
-  var ServiceClass = self.serviceClasses[service];
-  var contents = [];
-
-  if (self.options.cache && self.cacheExists(service)) {
-    contents.push(fs.readFileSync(self.cachePath(service)).toString());
-  } else {
-    var lines = fs.readFileSync(svcPath).toString().split(/\r?\n/);
-    var file = lines.map(function (line) {
-      line = line.replace(/^var\s*.*\s*=\s*require\s*\(.+\).*/, '');
-      line = line.replace(/^module.exports\s*=.*/, '');
-      return line;
+  if (name === 'all') {
+    return Object.keys(self.serviceClasses).map(function(service) {
+      var out = self.serviceClasses[service].apiVersions.map(function(version) {
+        if (version.indexOf('*') >= 0) return null;
+        return self.buildService(service + '-' + version);
+      }).filter(function(c) { return c !== null; }).join('\n');
+      self.buildService(service); // build 'latest', but don't add it to code
+      return out;
     }).join('\n');
-    if (self.options.minify) file = self.minify(file);
-    else file = self.stripComments(file);
-    if (self.options.cache) fs.writeFileSync(self.cachePath(service), file);
-
-    contents.push(file);
   }
 
-  Object.keys(versions).forEach(function(version) {
-    var svc = versions[version];
+  var match = name.match(/^(.+?)(?:-(.+?))?$/);
+  var service = match[1], version = match[2] || 'latest';
+  var contents = [];
+
+  if (!self.builtServices[service]) {
+    self.builtServices[service] = {};
+
+    if (self.options.cache && self.cacheExists(service)) {
+      contents.push(fs.readFileSync(self.cachePath(service)).toString());
+    } else if (this.serviceClasses[service]) {
+      var svcPath = self.options.libPath + '/lib/services/' + service + '.js';
+      var lines = fs.readFileSync(svcPath).toString().split(/\r?\n/);
+      var file = lines.map(function (line) {
+        line = line.replace(/^var\s*.*\s*=\s*require\s*\(.+\).*/, '');
+        line = line.replace(/^module.exports\s*=.*/, '');
+        return line;
+      }).join('\n');
+      if (self.options.minify) file = self.minify(file);
+      else file = self.stripComments(file);
+      if (self.options.cache) fs.writeFileSync(self.cachePath(service), file);
+
+      contents.push(file);
+    } else {
+      throw new Error('Invalid module: ' + service);
+    }
+  }
+
+  if (!self.builtServices[service][version]) {
+    self.builtServices[service][version] = true;
+
     var cacheName = service + '-' + version;
     if (self.options.cache && self.cacheExists(cacheName)) {
       contents.push(fs.readFileSync(self.cachePath(cacheName)).toString());
-    } else {
+    } else if (this.serviceClasses[service]) {
+      var svc = new this.serviceClasses[service]({apiVersion: version});
       var line = util.format('AWS.Service.defineServiceApi(AWS.%s, "%s", %s);',
-        self.className(svc.api), version, JSON.stringify(svc.api));
+        self.className(svc.api), svc.api.apiVersion, JSON.stringify(svc.api));
       if (self.options.cache) fs.writeFileSync(self.cachePath(cacheName), line);
       contents.push(line);
+    } else {
+      throw new Error('Invalid module: ' + service + '-' + version);
     }
-  });
+  }
 
   return contents.join('\n');
 };
@@ -155,10 +150,18 @@ Builder.prototype.addServices = function(services) {
     throw new Error('Incorrectly formatted service names');
   }
 
-  var map = self.buildServiceMap(services.split(','));
-  Object.keys(map).forEach(function(name) {
-    self.serviceCode.push(self.buildService(name, map[name]));
+  var invalidModules = [];
+  services.split(',').sort().forEach(function(name) {
+    try {
+      self.serviceCode.push(self.buildService(name));
+    } catch (e) {
+      invalidModules.push(name);
+    }
   });
+
+  if (invalidModules.length > 0) {
+    throw new Error('Missing modules: ' + invalidModules.join(', '));
+  }
 
   return self;
 };
