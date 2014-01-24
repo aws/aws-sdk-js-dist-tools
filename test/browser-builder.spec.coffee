@@ -92,7 +92,7 @@ describe 'Builder', ->
         cb(err, result)
 
     it 'defaults to no minification', ->
-      buildBundle null, null, 'AWS', (err, AWS) ->
+      buildBundle null, null, 'window.AWS', (err, AWS) ->
         expect(data).toMatch(/Copyright Amazon\.com/i)
 
     it 'can be minified (slow)', ->
@@ -101,13 +101,13 @@ describe 'Builder', ->
         expect(data).toMatch(/function \w\(\w,\w,\w\)\{function \w\(\w,\w\)\{/)
 
     it 'can build default services into bundle', ->
-      buildBundle null, null, 'AWS', (err, AWS) ->
+      buildBundle null, null, 'window.AWS', (err, AWS) ->
         expect(new AWS.S3().api.apiVersion).toEqual(new helpers.AWS.S3().api.apiVersion)
         expect(new AWS.DynamoDB().api.apiVersion).toEqual(new helpers.AWS.DynamoDB().api.apiVersion)
         expect(new AWS.STS().api.apiVersion).toEqual(new helpers.AWS.STS().api.apiVersion)
 
     it 'can build all services into bundle', ->
-      buildBundle 'all', null, 'AWS', (err, AWS) ->
+      buildBundle 'all', null, 'window.AWS', (err, AWS) ->
         Object.keys(helpers.AWS).forEach (k) ->
           if k.serviceIdentifier
             expect(typeof AWS[k]).toEqual('object')

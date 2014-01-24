@@ -171,7 +171,8 @@ Builder.prototype.build = function(callback) {
 
   if (this.options.cache && this.cacheExists('core')) {
     this.code = fs.readFileSync(this.cachePath('core')).toString();
-    callback(null, this.code + ';' + this.serviceCode.join('\n'));
+    callback(null, this.code + ';' +
+      this.serviceCode.join('\n') + ';window.AWS=AWS');
   } else {
     var browserFile = this.options.libPath + '/lib/browser.js';
     browserify(browserFile).ignore('domain').bundle(function (err, data) {
@@ -185,7 +186,8 @@ Builder.prototype.build = function(callback) {
       self.code = self.license + self.code;
       if (self.options.cache) fs.writeFileSync(self.cachePath('core'), self.code);
 
-      callback(null, self.code + ';' + self.serviceCode.join('\n'));
+      callback(null, self.code + ';' +
+        self.serviceCode.join('\n') + ';window.AWS=AWS');
     });
   }
 
