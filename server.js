@@ -14,7 +14,9 @@ function domainHandler(request, response, callback) {
   dom.on('error', function (err) {
     response.writeHead(400, err.message, {'content-type': 'text/plain'});
     response.end(err.message);
-  }).run(function() { callback(dom) });
+  }).run(function() {
+    try { callback(dom) } catch (e) { dom.emit('error', e); }
+  });
 }
 
 function buildSDK(request, response) {
