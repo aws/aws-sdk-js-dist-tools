@@ -237,6 +237,7 @@ if (require.main === module) {
   var options = {
     minify: process.env.MINIFY ? true : false,
     cache: process.env.CACHE ? true : false,
+    cacheRoot: process.env.CACHE_ROOT,
     libPath: process.env.LIB_PATH
   };
   var services = process.argv[2] || process.env.SERVICES;
