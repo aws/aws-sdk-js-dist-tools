@@ -1,6 +1,6 @@
 var url = require('url');
 var domain = require('domain');
-
+var fs = require('fs');
 var express = require('express');
 
 var Builder = require('./browser-builder');
@@ -22,21 +22,27 @@ function domainHandler(request, response, callback) {
 function buildSDK(request, response) {
   domainHandler(request, response, function(dom) {
     var version = request.params[0];
-    var libPath = request.app.get('libPaths')[version];
-    var cache = request.app.get('cache');
-    if (!libPath) {
+    var params = request.app.get('versions')[version];
+    if (!params) {
       var message = 'Unsupported SDK version ' + version;
       response.writeHead(400, message, {'content-type': 'text/plain'});
       response.end(message);
       return;
     }
 
+    var cache = request.app.get('cache');
     var minify = request.params[1] || false;
+    params = {
+      cache: cache,
+      minify: minify,
+      libPath: params.libPath,
+      cacheRoot: params.cacheRoot
+    };
+
     var query = url.parse(request.url).query;
     if (query) query = query.replace(/=?&/g, ',').replace(/=/, '-');
 
-    new Builder({cache: cache, minify: minify, libPath: libPath}).
-                addServices(query).build(function (err, code) {
+    new Builder(params).addServices(query).build(function (err, code) {
       if (err) return dom.emit('error', err);
 
       response.setHeader('content-type', 'text/javascript');
@@ -53,16 +59,26 @@ app.use(express.favicon());
 if (require.main === module) {
   app.use(express.logger()); // enable logging only for executable
 }
-app.get(/^\/aws-sdk-(v\d.+?)(\.min)?\.js$/, buildSDK);
+app.get(/^\/aws-sdk-(v\d.+?|latest)(\.min)?\.js$/, buildSDK);
+app.set('cache', process.env.NO_CACHE ? false : true);
+
+var versions = {};
+var cacheDir = __dirname + '/server-cache';
+if (app.get('cache') && fs.existsSync(cacheDir)) {
+  fs.readdirSync(cacheDir).forEach(function(version) {
+    versions[version] = { cacheRoot: cacheDir + '/' + version };
+  });
+}
+if (process.env.USE_MASTER) {
+  versions['latest'] = { libPath: __dirname + '/../' };
+}
+app.set('versions', versions);
 
 module.exports = app;
 
 // run if we called this tool directly
 if (require.main === module) {
-  require('./server-init')(function(result) {
-    app.set('cache', result.cache);
-    app.set('libPaths', result.libPaths);
-    app.listen(port);
-    console.log('* aws-sdk builder listening on http://localhost:' + port);
-  });
+  app.listen(port);
+  console.log('* AWS SDK builder listening on http://localhost:' + port);
+  console.log('* Serving versions: ' + Object.keys(versions).join(', '));
 }
