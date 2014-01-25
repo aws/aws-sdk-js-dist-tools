@@ -8,7 +8,8 @@
     "uglify-js": "2.x",
     "express": "3.x",
     "async": "*",
-    "graceful-fs": "*"
+    "graceful-fs": "*",
+    "aws-sdk": "2.x"
   },
   "devDependencies": {
     "jasmine-node": "latest",
