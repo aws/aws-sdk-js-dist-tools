@@ -9,8 +9,14 @@ evalCode = (code, preamble) ->
     })();
   """
 
+AWS = null
+if fs.existsSync(__dirname + '/../../lib/aws.js')
+  AWS = require('../../lib/aws')
+else
+  AWS = require(__dirname + '/../node_modules/aws-sdk/lib/aws')
+
 module.exports =
-  AWS: require('../../lib/aws')
+  AWS: AWS
   Builder: require('../browser-builder')
   chai: require('chai')
   evalCode: evalCode
