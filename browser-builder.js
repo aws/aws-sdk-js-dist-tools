@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
-var fs = require('graceful-fs');
+var fs = require('fs');
 var util = require('util');
-
-var browserify = require('browserify');
-var uglify = require('uglify-js');
 
 var defaultServices = 'dynamodb,s3,sqs,sns,sts';
 var sanitizeRegex = /[^a-zA-Z0-9,-]/;
@@ -177,6 +174,7 @@ Builder.prototype.build = function(callback) {
       this.serviceCode.join('\n') + ';window.AWS=AWS');
   } else {
     var browserFile = this.options.libPath + '/lib/browser.js';
+    var browserify = require('browserify');
     browserify(browserFile).ignore('domain').bundle(function (err, data) {
       if (err) return callback(err);
 
@@ -197,6 +195,8 @@ Builder.prototype.build = function(callback) {
 };
 
 Builder.prototype.minify = function(code) {
+  var uglify = require('uglify-js');
+
   this.options.minifyOptions = this.options.minifyOptions || {};
   this.options.minifyOptions.fromString = true;
 

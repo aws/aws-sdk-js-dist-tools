@@ -4,18 +4,16 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "aws-sdk": "2.x",
     "browserify": "3.x",
     "uglify-js": "2.x",
-    "express": "3.x",
-    "async": "*",
-    "graceful-fs": "*",
-    "aws-sdk": "2.x"
+    "express": "3.x"
   },
   "devDependencies": {
-    "jasmine-node": "latest",
-    "coffee-script": "latest",
-    "jshint": "latest",
-    "supertest": "latest"
+    "graceful-fs": "*",
+    "jasmine-node": "*",
+    "coffee-script": "*",
+    "supertest": "*"
   },
   "scripts" : {
     "test" : "jasmine-node --noColor --coffee test"
