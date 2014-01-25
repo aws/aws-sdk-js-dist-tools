@@ -1,17 +1,62 @@
+fs = require('fs')
 request = require('supertest')
-server = require('../server')
+app = require('../server')
 helpers = require('./helpers')
 expect = helpers.chai.expect
 
-paths = {}
-paths['v' + helpers.AWS.VERSION] = { libPath: __dirname + '/../node_modules/aws-sdk' }
-server.set('versions', paths)
-server.set('cache', false)
+describe 'app.init', ->
+  beforeEach -> process.env = {}
+
+  describe 'cache', ->
+    it 'defaults to true', ->
+      app.init()
+      expect(app.get('cache')).to.equal(true)
+
+    it 'turns cache off if NO_CACHE is set', ->
+      process.env.NO_CACHE = true
+      app.init()
+      expect(app.get('cache')).to.equal(false)
+
+  describe 'versions', ->
+    it 'sets versions to versions in server-cache directory', ->
+      app.init()
+      versions = fs.readdirSync(__dirname + '/../server-cache')
+      expect(Object.keys(app.get('versions')).sort()).to.eql(versions.sort())
+
+describe 'cached routes', ->
+  app.init()
+  version = Object.keys(app.get('versions'))[0]
+  route = null
+
+  get = -> request(app).get(route)
+
+  describe '/aws-sdk-' + version + '.js', ->
+    beforeEach -> route = '/aws-sdk-' + version + '.js'
+
+    it 'builds unminified SDK', (done) ->
+      get().set('Accept-Encoding', '').expect(200).
+        expect(/AWS\.DynamoDB/).expect(/AWS\.S3/).
+        expect(/Copyright Amazon\.com, Inc\./i).end(done)
+
+    it 'accepts services list as query string', (done) ->
+      get().query('iam,cloudwatch').expect(200).
+        expect(/AWS\.IAM/).expect(/AWS\.CloudWatch/).end(done)
+
+    it 'accepts services list as fancy query string', (done) ->
+      get().query('iam&cloudwatch=2010-08-01').expect(200).
+        expect(/AWS\.IAM/).expect(/AWS\.CloudWatch/).end(done)
 
 describe 'bundle server routes', ->
   route = null
   beforeEach -> route = '/'
-  get = -> request(server).get(route)
+
+  get = ->
+    paths = {}
+    paths['v' + helpers.AWS.VERSION] = libPath: __dirname + '/../node_modules/aws-sdk'
+
+    app.set('cache', false)
+    app.set('versions', paths)
+    request(app).get(route)
 
   describe '/aws-sdk-v' + helpers.AWS.VERSION + '.js', ->
     beforeEach -> route = '/aws-sdk-v' + helpers.AWS.VERSION + '.js'
@@ -67,4 +112,4 @@ describe 'bundle server routes', ->
         expect(400, /Incorrectly formatted service names/).end(done)
 
     it 'does not respond to any other route', (done) ->
-      request(server).post('/åßç').expect(404).end(done)
+      request(app).post('/åßç').expect(404).end(done)
