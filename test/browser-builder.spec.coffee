@@ -1,8 +1,12 @@
 helpers = require('./helpers')
 Builder = helpers.Builder
-child = require('child_process')
+exec = require('child_process').exec
+expect = helpers.chai.expect
 
 describe 'Builder', ->
+  if @timeout
+    @timeout(10000)
+
   describe 'addServices', ->
     builder = null
     code = null
@@ -14,14 +18,15 @@ describe 'Builder', ->
 
     assertServiceAdded = (klass, version) ->
       version = version || new helpers.AWS[klass]().api.apiVersion;
-      expect(code).toMatch 'AWS\\.' + klass +
-        ' = AWS\\.Service\\.defineService\\(\'' +
-        helpers.AWS[klass].serviceIdentifier + '\''
-      expect(code).toMatch 'AWS\\.Service\\.defineServiceApi\\(AWS\\.' +
-        klass + ', "' + version + '",'
+      expect(code).to.match(new RegExp('AWS\\.' + klass +
+        ' = window\\.AWS\\.Service\\.defineService\\(\'' +
+        helpers.AWS[klass].serviceIdentifier + '\''))
+      expect(code).to.match(new RegExp(
+        'window\\.AWS\\.Service\\.defineServiceApi\\(window\\.AWS\\.' +
+        klass + ', "' + version + '",'))
 
     assertBundleFailed = (services, errMsg) ->
-      expect(-> builder.addServices(services)).toThrow(errMsg)
+      expect(-> builder.addServices(services)).to.throw(errMsg)
 
     it 'accepts comma delimited services by name', ->
       add 's3,cloudwatch'
@@ -79,12 +84,9 @@ describe 'Builder', ->
           result = helpers.evalCode(code, bundleCache[cacheKey])
         return cb(null, result)
 
-      err = false
       opts = opts || {}
-      runs ->
-        new Builder(opts).addServices(services).build((e, c) -> err = e; data = c)
-      waitsFor -> err || data
-      runs ->
+      new Builder(opts).addServices(services).build (err, d) ->
+        data = d
         bundleCache[cacheKey] = data
         result = null
         if !err && code
@@ -93,51 +95,41 @@ describe 'Builder', ->
 
     it 'defaults to no minification', ->
       buildBundle null, null, 'window.AWS', (err, AWS) ->
-        expect(data).toMatch(/Copyright Amazon\.com/i)
+        expect(data).to.match(/Copyright Amazon\.com/i)
 
     it 'can be minified (slow)', ->
       buildBundle null, minify: true, null, ->
-        expect(data).toMatch(/Copyright Amazon\.com/i) # has license
-        expect(data).toMatch(/function \w\(\w,\w,\w\)\{function \w\(\w,\w\)\{/)
+        expect(data).to.match(/Copyright Amazon\.com/i) # has license
+        expect(data).to.match(/function \w\(\w,\w,\w\)\{function \w\(\w,\w\)\{/)
 
     it 'can build default services into bundle', ->
       buildBundle null, null, 'window.AWS', (err, AWS) ->
-        expect(new AWS.S3().api.apiVersion).toEqual(new helpers.AWS.S3().api.apiVersion)
-        expect(new AWS.DynamoDB().api.apiVersion).toEqual(new helpers.AWS.DynamoDB().api.apiVersion)
-        expect(new AWS.STS().api.apiVersion).toEqual(new helpers.AWS.STS().api.apiVersion)
+        expect(new AWS.S3().api.apiVersion).to.equal(new helpers.AWS.S3().api.apiVersion)
+        expect(new AWS.DynamoDB().api.apiVersion).to.equal(new helpers.AWS.DynamoDB().api.apiVersion)
+        expect(new AWS.STS().api.apiVersion).to.equal(new helpers.AWS.STS().api.apiVersion)
 
     it 'can build all services into bundle', ->
       buildBundle 'all', null, 'window.AWS', (err, AWS) ->
         Object.keys(helpers.AWS).forEach (k) ->
           if k.serviceIdentifier
-            expect(typeof AWS[k]).toEqual('object')
+            expect(typeof AWS[k]).to.equal('object')
 
     describe 'as executable', ->
       cwd = __dirname + '/../'
-      script = './browser-builder.js'
+      script = './browser-builder.js '
 
-      it 'uses first argument to get services list', ->
-        done = false
-        runs ->
-          pid = child.spawn(script, ['iam-2010-05-08'], cwd: cwd)
-          pid.stdout.on('data', (b) -> data += b.toString())
-          pid.on('close', -> done = true)
-        waitsFor -> done
-        runs ->
-          expect(data).toMatch(/Copyright Amazon\.com/i)
-          expect(data).toContain('"2010-05-08"')
-          expect(data).not.toContain('"2006-03-01"')
+      it 'uses first argument to get services list', (done)  ->
+        exec script + 'iam-2010-05-08', cwd: cwd, maxBuffer: 999999999, (e, out) ->
+          expect(out).to.match(/Copyright Amazon\.com/i)
+          expect(out).to.contain('"2010-05-08"')
+          expect(out).not.to.contain('"2006-03-01"')
+          done()
 
-      it 'uses MINIFY environment variable to set minification mode', ->
-        done = false
-        runs ->
-          env = JSON.parse(JSON.stringify(process.env))
-          env.MINIFY = '1'
-          pid = child.spawn(script, [], cwd: cwd, env: env)
-          pid.stdout.on('data', (b) -> data += b.toString())
-          pid.on('close', -> done = true)
-        waitsFor -> done
-        runs ->
-          expect(data).toMatch(/Copyright Amazon\.com/i)
-          expect(data).toMatch(/function \w\(\w,\w,\w\)\{function \w\(\w,\w\)\{/)
-          expect(data).toContain('"2006-03-01"')
+      it 'uses MINIFY environment variable to set minification mode', (done) ->
+        env = JSON.parse(JSON.stringify(process.env))
+        env.MINIFY = '1'
+        exec script, cwd: cwd, maxBuffer: 999999999, (e, out) ->
+          expect(out).to.match(/Copyright Amazon\.com/i)
+          expect(out).to.match(/function \w\(\w,\w,\w\)\{function \w\(\w,\w\)\{/)
+          expect(out).to.contain('"2006-03-01"')
+          done()

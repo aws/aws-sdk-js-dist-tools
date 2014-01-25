@@ -1,7 +1,7 @@
 request = require('supertest')
-express = require('express')
 server = require('../server')
 helpers = require('./helpers')
+expect = helpers.chai.expect
 
 paths = {}
 paths['v' + helpers.AWS.VERSION] = { libPath: __dirname + '/../node_modules/aws-sdk' }
@@ -21,10 +21,10 @@ describe 'bundle server routes', ->
         expect(/AWS\.DynamoDB/).expect(/AWS\.S3/).
         expect(/Copyright Amazon\.com, Inc\./i).end (err, res) ->
           return done(err) if err
-          expect(res.text.substr(0, 3)).toEqual('// ') # license first
-          expect(res.headers['content-encoding']).not.toEqual('gzip')
+          expect(res.text.substr(0, 3)).to.equal('// ') # license first
+          expect(res.headers['content-encoding']).not.to.equal('gzip')
           svc = helpers.evalCode("new window.AWS.DynamoDB()", res.text)
-          expect(svc.api.apiVersion).toEqual(new helpers.AWS.DynamoDB().api.apiVersion)
+          expect(svc.api.apiVersion).to.equal(new helpers.AWS.DynamoDB().api.apiVersion)
           done(err)
 
     it 'accepts services list as query string', (done) ->
@@ -41,7 +41,7 @@ describe 'bundle server routes', ->
 
     it 'can return contents as gzipped data', (done) ->
       get().set('Accept-Encoding', 'gzip').expect(200).end (err, res) ->
-        expect(res.headers['content-encoding']).toEqual('gzip')
+        expect(res.headers['content-encoding']).to.equal('gzip')
         done(err)
 
   describe '/aws-sdk-v' + helpers.AWS.VERSION + '.min.js', ->
@@ -49,11 +49,11 @@ describe 'bundle server routes', ->
 
     it 'builds minified SDK', (done) ->
       get().expect(200).end (err, res) ->
-          expect(res.text).toMatch(/Copyright Amazon\.com, Inc\./i)
-          expect(res.text).toMatch(/function \w\(\w,\w,\w\)\{function \w\(\w,\w\)\{/)
-          svc = helpers.evalCode("new window.AWS.DynamoDB()", res.text)
-          expect(svc.api.apiVersion).toEqual(new helpers.AWS.DynamoDB().api.apiVersion)
-          done(err)
+        expect(res.text).to.match(/Copyright Amazon\.com, Inc\./i)
+        expect(res.text).to.match(/function \w\(\w,\w,\w\)\{function \w\(\w,\w\)\{/)
+        svc = helpers.evalCode("new window.AWS.DynamoDB()", res.text)
+        expect(svc.api.apiVersion).to.equal(new helpers.AWS.DynamoDB().api.apiVersion)
+        done(err)
 
   describe 'error handling', ->
     beforeEach -> route = '/aws-sdk-v' + helpers.AWS.VERSION + '.js'

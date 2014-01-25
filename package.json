@@ -12,11 +12,12 @@
   "devDependencies": {
     "async": "*",
     "graceful-fs": "*",
-    "jasmine-node": "*",
+    "mocha": "*",
+    "chai": "*",
     "coffee-script": "*",
     "supertest": "*"
   },
   "scripts" : {
-    "test" : "jasmine-node --noColor --coffee test"
+    "test" : "mocha --compilers coffee:coffee-script -s 1000"
   }
 }
