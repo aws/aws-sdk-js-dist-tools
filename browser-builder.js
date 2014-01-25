@@ -28,7 +28,7 @@ function Builder(options) {
 }
 
 Builder.prototype.getRootPath = function() {
-  var root = __dirname + '/aws-sdk';
+  var root = __dirname + '/node_modules/aws-sdk';
   if (!fs.existsSync(root)) root = __dirname + '/..';
   return root;
 }
