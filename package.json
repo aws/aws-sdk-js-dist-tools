@@ -8,9 +8,7 @@
     "uglify-js": "2.x",
     "express": "3.x",
     "async": "*",
-    "graceful-fs": "*",
-    "xml2js": "0.2.4",
-    "xmlbuilder": "0.4.2"
+    "graceful-fs": "*"
   },
   "devDependencies": {
     "jasmine-node": "latest",
