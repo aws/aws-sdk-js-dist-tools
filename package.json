@@ -10,6 +10,7 @@
     "express": "3.x"
   },
   "devDependencies": {
+    "async": "*",
     "graceful-fs": "*",
     "jasmine-node": "*",
     "coffee-script": "*",
