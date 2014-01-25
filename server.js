@@ -60,24 +60,28 @@ if (require.main === module) {
   app.use(express.logger()); // enable logging only for executable
 }
 app.get(/^\/aws-sdk-(v\d.+?|latest)(\.min)?\.js$/, buildSDK);
-app.set('cache', process.env.NO_CACHE ? false : true);
 
-var versions = {};
-var cacheDir = __dirname + '/server-cache';
-if (app.get('cache') && fs.existsSync(cacheDir)) {
-  fs.readdirSync(cacheDir).forEach(function(version) {
-    versions[version] = { cacheRoot: cacheDir + '/' + version };
-  });
+app.init = function() {
+  app.set('cache', process.env.NO_CACHE ? false : true);
+
+  var versions = {};
+  var cacheDir = __dirname + '/server-cache';
+  if (app.get('cache') && fs.existsSync(cacheDir)) {
+    fs.readdirSync(cacheDir).forEach(function(version) {
+      versions[version] = { cacheRoot: cacheDir + '/' + version };
+    });
+  }
+  if (process.env.USE_MASTER) {
+    versions['latest'] = { libPath: __dirname + '/../' };
+  }
+  app.set('versions', versions);
 }
-if (process.env.USE_MASTER) {
-  versions['latest'] = { libPath: __dirname + '/../' };
-}
-app.set('versions', versions);
 
 module.exports = app;
 
 // run if we called this tool directly
 if (require.main === module) {
+  app.init();
   app.listen(port);
   console.log('* AWS SDK builder listening on http://localhost:' + port);
   console.log('* Serving versions: ' + Object.keys(versions).join(', '));
