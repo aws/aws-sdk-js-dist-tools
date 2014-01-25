@@ -2,7 +2,10 @@ fs = require('fs')
 request = require('supertest')
 app = require('../server')
 helpers = require('./helpers')
+spawn = require('child_process').spawn
+http = require('http')
 expect = helpers.chai.expect
+origEnv = process.env
 
 describe 'app.init', ->
   beforeEach -> process.env = {}
@@ -113,3 +116,26 @@ describe 'bundle server routes', ->
 
     it 'does not respond to any other route', (done) ->
       request(app).post('/åßç').expect(404).end(done)
+
+describe 'main program', ->
+  app.init()
+  version = Object.keys(app.get('versions'))[0]
+
+  runServer = (done, port) ->
+    port = (port || '8080').toString()
+    url = 'http://127.0.0.1:' + port + '/aws-sdk-' + version
+    child = spawn(__dirname + '/../server.js', [port.toString()], env: origEnv)
+    child.stdout.on 'data', (data) ->
+      if data.toString().indexOf('Serving versions:') >= 0
+        http.get url + '.js', (res) ->
+          expect(res.statusCode).to.equal(200)
+          http.get url + '.min.js', (res) ->
+            expect(res.statusCode).to.equal(200)
+            child.kill()
+            done()
+
+  it 'runs on 8080', (done) ->
+    runServer(done)
+
+  it 'can be run on another port', (done) ->
+    runServer(done, 40000 + parseInt(Math.random(100) * 100, 10))
