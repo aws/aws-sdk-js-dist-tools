@@ -110,6 +110,7 @@ Builder.prototype.buildService = function(name) {
       var file = lines.map(function (line) {
         line = line.replace(/^var\s*.*\s*=\s*require\s*\(.+\).*/, '');
         line = line.replace(/^module.exports\s*=.*/, '');
+        line = line.replace(/\bAWS\b/g, 'window.AWS');
         return line;
       }).join('\n');
       if (self.options.minify) file = self.minify(file);
@@ -130,7 +131,8 @@ Builder.prototype.buildService = function(name) {
       contents.push(fs.readFileSync(self.cachePath(cacheName)).toString());
     } else if (this.serviceClasses[service]) {
       var svc = new this.serviceClasses[service]({apiVersion: version});
-      var line = util.format('AWS.Service.defineServiceApi(AWS.%s, "%s", %s);',
+      var line = util.format(
+        'window.AWS.Service.defineServiceApi(window.AWS.%s, "%s", %s);',
         self.className(svc.api), svc.api.apiVersion, JSON.stringify(svc.api));
       if (self.options.cache) fs.writeFileSync(self.cachePath(cacheName), line);
       contents.push(line);
@@ -170,8 +172,7 @@ Builder.prototype.build = function(callback) {
 
   if (this.options.cache && this.cacheExists('core')) {
     this.code = fs.readFileSync(this.cachePath('core')).toString();
-    callback(null, this.code + ';' +
-      this.serviceCode.join('\n') + ';window.AWS=AWS');
+    callback(null, this.code + ';' + this.serviceCode.join('\n'));
   } else {
     var browserFile = this.options.libPath + '/lib/browser.js';
     var browserify = require('browserify');
@@ -186,8 +187,7 @@ Builder.prototype.build = function(callback) {
       self.code = self.license + self.code;
       if (self.options.cache) fs.writeFileSync(self.cachePath('core'), self.code);
 
-      callback(null, self.code + ';' +
-        self.serviceCode.join('\n') + ';window.AWS=AWS');
+      callback(null, self.code + ';' + self.serviceCode.join('\n'));
     });
   }
 
