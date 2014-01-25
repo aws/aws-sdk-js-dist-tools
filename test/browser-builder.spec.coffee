@@ -4,9 +4,6 @@ exec = require('child_process').exec
 expect = helpers.chai.expect
 
 describe 'Builder', ->
-  if @timeout
-    @timeout(10000)
-
   describe 'addServices', ->
     builder = null
     code = null
