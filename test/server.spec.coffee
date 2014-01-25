@@ -4,8 +4,8 @@ server = require('../server')
 helpers = require('./helpers')
 
 paths = {}
-paths['v' + helpers.AWS.VERSION] = __dirname + '/../../'
-server.set('libPaths', paths)
+paths['v' + helpers.AWS.VERSION] = { libPath: __dirname + '/../node_modules/aws-sdk' }
+server.set('versions', paths)
 server.set('cache', false)
 
 describe 'bundle server routes', ->
