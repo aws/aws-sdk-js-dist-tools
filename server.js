@@ -7,7 +7,12 @@ var express = require('express');
 
 var Builder = require('./browser-builder');
 
-var port = process.argv[2] || process.env.PORT || 8080;
+var port;
+if (__dirname.match(/\/srv\//)) {
+  port = 80;
+} else {
+  port = process.argv[2] || process.env.PORT || 8080;
+}
 
 function domainHandler(request, response, callback) {
   var dom = domain.create();
