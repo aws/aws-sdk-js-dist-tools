@@ -18,6 +18,7 @@
     "supertest": "*"
   },
   "scripts" : {
-    "test" : "mocha --compilers coffee:coffee-script -s 1000 -t 10000"
+    "test": "mocha --compilers coffee:coffee-script -s 1000 -t 10000",
+    "postinstall": "npm test"
   }
 }
