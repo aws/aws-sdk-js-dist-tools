@@ -14,7 +14,7 @@
     "graceful-fs": "*",
     "mocha": "*",
     "chai": "*",
-    "coffee-script": "*",
+    "coffee-script": "1.6.x",
     "supertest": "*"
   },
   "scripts" : {
