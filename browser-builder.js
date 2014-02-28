@@ -3,7 +3,7 @@
 var fs = require('fs');
 var util = require('util');
 
-var defaultServices = 'dynamodb,s3,sqs,sns,sts';
+var defaultServices = 'cloudwatch,dynamodb,kinesis,s3,sqs,sns,sts';
 var sanitizeRegex = /[^a-zA-Z0-9,-]/;
 
 function Builder(options) {
