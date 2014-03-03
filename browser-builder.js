@@ -14,7 +14,7 @@ function Builder(options) {
   this.serviceCode = [];
   this.builtServices = {};
   this.license = [
-    '// AWS SDK for JavaScript v' + this.AWS.VERSION,
+    '// AWS SDK for JavaScript v' + (this.AWS ? this.AWS.VERSION : 'UNKNOWN'),
     '// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.',
     '// License at https://sdk.amazonaws.com/js/BUNDLE_LICENSE.txt'
   ].join('\n') + '\n';
