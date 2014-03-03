@@ -24,6 +24,7 @@ function init(versions, cb) {
 
     async.series([
       downloadVersion.bind({version: version}),
+      npmInstall.bind({version: version}),
       function(next) {
         var cachePath = cacheRoot + '/' + version;
         if (cache) {
@@ -71,6 +72,24 @@ function downloadVersion(done) {
        'tar xfz - -C ' + versionDirname + ' --strip=1', function(err, stdout, stderr) {
     if (err) {
       console.log('* Could not download', sdkName);
+      console.log(stderr);
+      process.exit(1);
+      return;
+    }
+    done();
+  });
+}
+
+function npmInstall(done) {
+  var version = this.version;
+  var sdkName = version;
+  var versionDirname = __dirname + '/sdks/' + sdkName;
+  if (fs.existsSync(versionDirname + '/node_modules')) return done();
+
+  console.log('* npm install for ' + sdkName);
+  exec('cd ' + versionDirname + ' && npm install --production', function(err, stdout, stderr) {
+    if (err) {
+      console.log('* Could not npm install', sdkName);
       console.log(stderr);
       process.exit(1);
       return;
