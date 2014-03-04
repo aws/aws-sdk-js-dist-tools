@@ -29,6 +29,7 @@ describe 'Builder', ->
       add 's3,cloudwatch'
       assertServiceAdded 'S3'
       assertServiceAdded 'CloudWatch'
+      assertServiceAdded 'STS' # STS always added
 
     it 'uses latest service version if version suffix is not supplied', ->
       add 'rds'

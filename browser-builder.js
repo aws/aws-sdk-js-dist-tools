@@ -152,13 +152,17 @@ Builder.prototype.addServices = function(services) {
   }
 
   var invalidModules = [];
+  var stsIncluded = false;
   services.split(',').sort().forEach(function(name) {
     try {
+      if (name.match(/^sts\b/)) stsIncluded = true;
       self.serviceCode.push(self.buildService(name));
     } catch (e) {
       invalidModules.push(name);
     }
   });
+
+  if (!stsIncluded) self.serviceCode.push(self.buildService('sts'));
 
   if (invalidModules.length > 0) {
     throw new Error('Missing modules: ' + invalidModules.join(', '));
