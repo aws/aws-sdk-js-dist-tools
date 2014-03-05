@@ -143,6 +143,10 @@ describe 'bundle server routes', ->
     it 'does not respond to any other route', (done) ->
       request(app).post('/åßç').expect(404).end(done)
 
+    it 'returns 400 if version is invalid', (done) ->
+      route = '/aws-sdk-v0.0.js'
+      get().expect(400, /Unsupported SDK version v0.0/).end(done)
+
 describe 'main program', ->
   app.init()
   version = Object.keys(app.get('versions'))[0]
