@@ -49,6 +49,23 @@ describe 'cached routes', ->
       get().query('iam&cloudwatch=2010-08-01').expect(200).
         expect(/AWS\.IAM/).expect(/AWS\.CloudWatch/).end(done)
 
+    describe 'older versions', ->
+      beforeEach ->
+        route = '/aws-sdk-v2.0.0-rc1.js'
+
+      it 'does not generate unbuilt services', (done) ->
+        get().query('kinesis').expect(400).end(done)
+
+      it 'does not generate APIs that were not built for a given SDK version', ->
+        get().query('cloudfront=2013-11-22').expect(200).end (err, res) ->
+          expect(res.text).not.to.match(/2013-11-22/)
+          done()
+
+      it 'does not add services that were added to default in previous versions', ->
+        get().expect(400).end (err, res) ->
+          expect(res.text).not.to.match(/AWS\.Kinesis/)
+          done()
+
 describe 'bundle server routes', ->
   route = null
   beforeEach -> route = '/'
