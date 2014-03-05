@@ -66,12 +66,11 @@ describe 'cached routes', ->
         done()
 
   describe 'acceptance', ->
-    Object.keys(app.get('versions')).slice(1).forEach (version) ->
+    Object.keys(app.get('versions')).forEach (version) ->
       describe '/aws-sdk-' + version + '.js', ->
-        beforeEach -> route = '/aws-sdk-' + version + '.js'
-
         it 'builds unminified SDK', (done) ->
-          get().set('Accept-Encoding', '').expect(200).end (err, res) ->
+          route = '/aws-sdk-' + version + '.js'
+          get().expect(200).end (err, res) ->
             eVersion = helpers.evalCode('window.AWS.VERSION', res.text)
             expect('v' + eVersion).to.equal(version)
             done()
