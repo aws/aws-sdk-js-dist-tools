@@ -15,10 +15,12 @@
     "mocha": "*",
     "chai": "*",
     "coffee-script": "1.6.x",
-    "supertest": "*"
+    "supertest": "*",
+    "instanbul": "*"
   },
   "scripts" : {
     "test": "mocha --compilers coffee:coffee-script -s 1000 -t 10000",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --compilers coffee:coffee-script -s 1000 -t 10000",
     "postinstall": "npm test"
   }
 }
