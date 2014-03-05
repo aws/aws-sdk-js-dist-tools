@@ -85,6 +85,10 @@ function DefaultStrategy(builder) {
     '// License at https://sdk.amazonaws.com/js/BUNDLE_LICENSE.txt'
   ].join('\n') + '\n';
   this.setServiceClasses();
+
+  if (this.isCached && !this.builder.cacheExists()) {
+    fs.mkdirSync(this.builder.cachePath());
+  }
 }
 
 DefaultStrategy.prototype.setServiceClasses = function() {
@@ -276,7 +280,9 @@ Builder.prototype.buildService = function(name, usingDefaultServices) {
     var lines = this.buildStrategy.getServiceHeader(service);
     if (lines === null) {
       if (!usingDefaultServices) {
-        throw new Error('Invalid module: ' + service);
+        var err = new Error('Invalid module: ' + service);
+        err.name = 'InvalidModuleError';
+        throw err;
       }
     } else {
       contents.push(lines);
@@ -289,7 +295,9 @@ Builder.prototype.buildService = function(name, usingDefaultServices) {
     var lines = this.buildStrategy.getService(service, version);
     if (lines === null) {
       if (!usingDefaultServices) {
-        throw new Error('Invalid module: ' + service + '-' + version);
+        var err = new Error('Invalid module: ' + service + '-' + version);
+        err.name = 'InvalidModuleError';
+        throw err;
       }
     } else {
       contents.push(lines);
@@ -316,7 +324,8 @@ Builder.prototype.addServices = function(services) {
     try {
       this.serviceCode.push(this.buildService(name, usingDefaultServices));
     } catch (e) {
-      invalidModules.push(name);
+      if (e.name === 'InvalidModuleError') invalidModules.push(name);
+      else throw e;
     }
   }.bind(this));
 
@@ -333,7 +342,7 @@ Builder.prototype.addServices = function(services) {
 
 Builder.prototype.build = function(callback) {
   this.buildStrategy.getCore(function(err, core) {
-    callback(null, core + ';' + this.serviceCode.join('\n'));
+    callback(err, err ? null : (core + ';' + this.serviceCode.join('\n')));
   }.bind(this));
 };
 
