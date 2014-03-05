@@ -16,7 +16,7 @@
     "chai": "*",
     "coffee-script": "1.6.x",
     "supertest": "*",
-    "instanbul": "*"
+    "istanbul": "*"
   },
   "scripts" : {
     "test": "mocha --compilers coffee:coffee-script -s 1000 -t 10000",
