@@ -41,8 +41,9 @@ describe 'Builder', ->
 
     it 'accepts "all" for all services', ->
       add 'all'
-      Object.keys(builder.serviceClasses).forEach (s) ->
-        name = builder.className(new builder.serviceClasses[s]().api)
+      Object.keys(builder.buildStrategy.serviceClasses).forEach (s) ->
+        api = new builder.buildStrategy.serviceClasses[s]().api
+        name = builder.buildStrategy.className(api)
         assertServiceAdded(name)
 
     it 'throws an error if the service does not exist', ->

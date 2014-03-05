@@ -56,12 +56,11 @@ describe 'cached routes', ->
       it 'does not generate unbuilt services', (done) ->
         get().query('kinesis').expect(400).end(done)
 
-      it 'does not generate APIs that were not built for a given SDK version', ->
-        get().query('cloudfront=2013-11-22').expect(200).end (err, res) ->
-          expect(res.text).not.to.match(/2013-11-22/)
-          done()
+      it 'does not generate APIs that were not built for a given SDK version', (done) ->
+        get().query('cloudfront=2013-11-22').expect(400).
+          expect(/Missing modules: cloudfront-2013-11-22/).end(done)
 
-      it 'does not add services that were added to default in previous versions', ->
+      it 'does not add services that were added to default in previous versions', (done) ->
         get().expect(400).end (err, res) ->
           expect(res.text).not.to.match(/AWS\.Kinesis/)
           done()
