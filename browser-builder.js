@@ -8,6 +8,7 @@ var sanitizeRegex = /[^a-zA-Z0-9,-]/;
 
 function CacheStrategy(builder) {
   this.builder = builder;
+  this.cacheRoot = this.builder.options.cacheRoot;
   this.minify = this.builder.options.minify;
 
   this.loadServices();
