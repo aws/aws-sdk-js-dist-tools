@@ -1,6 +1,7 @@
 helpers = require('./helpers')
 Builder = helpers.Builder
 exec = require('child_process').exec
+fs = require('fs')
 expect = helpers.chai.expect
 
 describe 'Builder', ->
@@ -112,6 +113,54 @@ describe 'Builder', ->
         Object.keys(helpers.AWS).forEach (k) ->
           if k.serviceIdentifier
             expect(typeof AWS[k]).to.equal('object')
+
+    describe 'cached writer', ->
+      it 'writes core and services to disk', (done) ->
+        root = __dirname + '/tmpcache/'
+        builder = new Builder(writeCache: true, cacheRoot: root)
+        builder.addServices('s3').build ->
+          try
+            ['s3.js', 's3-latest.js', '_core.js'].forEach (item) ->
+              expect(fs.existsSync(root + item)).to.equal(true, item + ' exists?')
+          finally
+            exec('rm -rf ' + root, done)
+
+      it 'writes minified core and services to disk', (done) ->
+        root = __dirname + '/tmpcache/'
+        builder = new Builder(writeCache: true, cacheRoot: root, minify: true)
+        builder.addServices('s3').build ->
+          try
+            ['s3.min.js', 's3-latest.min.js', '_core.min.js'].forEach (item) ->
+              expect(fs.existsSync(root + item)).to.equal(true, item + ' exists?')
+          finally
+            exec('rm -rf ' + root, done)
+
+    describe 'cached loading', ->
+      root = __dirname + '/tmpcache/'
+
+      it 'sets up cache', (done) ->
+        builder = new Builder(writeCache: true, cacheRoot: root)
+        builder.addServices('s3').build(done)
+
+      it 'loads from cache', ->
+        builder = new Builder(cache: true, cacheRoot: root)
+        builder.addServices('all').build (err, code) ->
+          expect(code).to.contain('window.AWS.S3 = ')
+
+      it 'fails if cache item is missing', ->
+        builder = new Builder(cache: true, cacheRoot: root)
+        expect(-> builder.addServices('kinesis')).to.throw('Missing modules: kinesis')
+
+      it 'fails to load from core if core is missing', (done) ->
+        exec 'rm ' + root + '_core.js', ->
+          builder = new Builder(cache: true, cacheRoot: root)
+          builder.addServices('s3').build (err, data) ->
+            expect(err.message).to.equal('Core not found.')
+            expect(data).to.equal(null)
+            done()
+
+      it 'removes cache', (done) ->
+        exec('rm -rf ' + root, done)
 
     describe 'as executable', ->
       cwd = __dirname + '/../'
