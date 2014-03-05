@@ -33,10 +33,10 @@ function init(versions, cb) {
         }
 
         async.parallel([
-          buildVersion.bind({cache: cache, minify: true, cacheRoot: cachePath,
-            libPath: libPath, version: version}),
-          buildVersion.bind({cache: cache, minify: false, cacheRoot: cachePath,
-            libPath: libPath, version: version})
+          buildVersion.bind({writeCache: cache, minify: true,
+            cacheRoot: cachePath, libPath: libPath, version: version}),
+          buildVersion.bind({writeCache: cache, minify: false,
+            cacheRoot: cachePath, libPath: libPath, version: version})
         ], function() { console.log('* Done building ' + version); next(); });
       },
       function(next) {
@@ -50,7 +50,7 @@ function init(versions, cb) {
 }
 
 function buildVersion(done) {
-  if (!this.cache) return done();
+  if (!this.writeCache) return done();
 
   if (this.minify) {
     console.log('* Building min/unmin cache for ' + this.version);

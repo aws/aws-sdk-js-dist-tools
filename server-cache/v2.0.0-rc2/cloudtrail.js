@@ -2,6 +2,6 @@
 
 
 
-AWS.CloudTrail = AWS.Service.defineService('cloudtrail', ['2013-11-01']);
+window.AWS.CloudTrail = window.AWS.Service.defineService('cloudtrail', ['2013-11-01']);
 
 

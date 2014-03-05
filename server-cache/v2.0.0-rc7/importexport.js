@@ -1,5 +1,5 @@
 
 
-AWS.ImportExport = AWS.Service.defineService('importexport', ['2010-06-01']);
+window.AWS.ImportExport = window.AWS.Service.defineService('importexport', ['2010-06-01']);
 
 

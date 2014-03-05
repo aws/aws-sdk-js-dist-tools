@@ -2,7 +2,7 @@
 
 
 
-AWS.DynamoDB = AWS.Service.defineService('dynamodb', ['2012-08-10', '2011-12-05'], {
+window.AWS.DynamoDB = window.AWS.Service.defineService('dynamodb', ['2012-08-10', '2011-12-05'], {
   setupRequestListeners: function setupRequestListeners(request) {
     if (request.service.config.dynamoDbCrc32) {
       request.addListener('extractData', this.checkCrc32);
@@ -12,7 +12,7 @@ AWS.DynamoDB = AWS.Service.defineService('dynamodb', ['2012-08-10', '2011-12-05'
 
   checkCrc32: function checkCrc32(resp) {
     if (!resp.request.service.crc32IsValid(resp)) {
-      resp.error = AWS.util.error(new Error(), {
+      resp.error = window.AWS.util.error(new Error(), {
         code: 'CRC32CheckFailed',
         message: 'CRC32 integrity check failed',
         retryable: true
@@ -24,7 +24,7 @@ AWS.DynamoDB = AWS.Service.defineService('dynamodb', ['2012-08-10', '2011-12-05'
   crc32IsValid: function crc32IsValid(resp) {
     var crc = resp.httpResponse.headers['x-amz-crc32'];
     if (!crc) return true; // no (valid) CRC32 header
-    return parseInt(crc, 10) == AWS.util.crypto.crc32(resp.httpResponse.body);
+    return parseInt(crc, 10) == window.AWS.util.crypto.crc32(resp.httpResponse.body);
   },
 
 

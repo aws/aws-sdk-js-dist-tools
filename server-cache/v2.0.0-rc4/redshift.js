@@ -2,6 +2,6 @@
 
 
 
-AWS.Redshift = AWS.Service.defineService('redshift', ['2012-12-01']);
+window.AWS.Redshift = window.AWS.Service.defineService('redshift', ['2012-12-01']);
 
 

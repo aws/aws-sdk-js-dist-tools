@@ -2,7 +2,7 @@
 
 
 
-AWS.Glacier = AWS.Service.defineService('glacier', ['2012-06-01'], {
+window.AWS.Glacier = window.AWS.Service.defineService('glacier', ['2012-06-01'], {
   setupRequestListeners: function setupRequestListeners(request) {
     request.on('validate', this.validateAccountId);
     request.on('build', this.addGlacierApiVersion);
@@ -11,7 +11,7 @@ AWS.Glacier = AWS.Service.defineService('glacier', ['2012-06-01'], {
 
   validateAccountId: function validateAccountId(request) {
     if (request.params.accountId !== undefined) return;
-    request.params = AWS.util.copy(request.params);
+    request.params = window.AWS.util.copy(request.params);
     request.params.accountId = '-';
   },
 
@@ -32,7 +32,7 @@ AWS.Glacier = AWS.Service.defineService('glacier', ['2012-06-01'], {
   }
 });
 
-AWS.util.update(AWS.Glacier.prototype, {
+window.AWS.util.update(window.AWS.Glacier.prototype, {
 
 
 
@@ -41,12 +41,12 @@ AWS.util.update(AWS.Glacier.prototype, {
 
     var mb = 1024 * 1024;
     var hashes = [];
-    var hash = AWS.util.crypto.createHash('sha256');
+    var hash = window.AWS.util.crypto.createHash('sha256');
 
     for (var i = 0; i < data.length; i += mb) {
       var chunk = data.slice(i, Math.min(i + mb, data.length));
       hash.update(chunk);
-      hashes.push(AWS.util.crypto.sha256(chunk));
+      hashes.push(window.AWS.util.crypto.sha256(chunk));
     }
 
     return {
@@ -64,7 +64,7 @@ AWS.util.update(AWS.Glacier.prototype, {
           var tmpHash = new Buffer(64);
           tmpHash.write(hashes[i], 0, 32, 'binary');
           tmpHash.write(hashes[i+1], 32, 32, 'binary');
-          tmpHashes.push(AWS.util.crypto.sha256(tmpHash));
+          tmpHashes.push(window.AWS.util.crypto.sha256(tmpHash));
         } else {
           tmpHashes.push(hashes[i]);
         }
@@ -72,7 +72,7 @@ AWS.util.update(AWS.Glacier.prototype, {
       hashes = tmpHashes;
     }
 
-    return AWS.util.crypto.toHex(hashes[0]);
+    return window.AWS.util.crypto.toHex(hashes[0]);
   }
 });
 

@@ -2,7 +2,7 @@
 
 
 
-AWS.ElasticTranscoder = AWS.Service.defineService('elastictranscoder', ['2012-09-25'], {
+window.AWS.ElasticTranscoder = window.AWS.Service.defineService('elastictranscoder', ['2012-09-25'], {
   setupRequestListeners: function setupRequestListeners(request) {
     request.addListener('extractError', this.extractErrorCode);
   },

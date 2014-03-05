@@ -254,7 +254,7 @@ Builder.prototype.getRootPath = function() {
 Builder.prototype.cachePath = function(path) {
   var fullPath = this.options.cacheRoot;
   if (path) {
-    fullPath += '/' + path + (this.minify ? '.min' : '') + '.js';
+    fullPath += '/' + path + (this.options.minify ? '.min' : '') + '.js';
   }
 
   return fullPath;

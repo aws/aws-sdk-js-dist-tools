@@ -4,10 +4,10 @@
 
 
 
-AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
+window.AWS.S3 = window.AWS.Service.defineService('s3', ['2006-03-01'], {
 
   initialize: function initialize(options) {
-    AWS.Service.prototype.initialize.call(this, options);
+    window.AWS.Service.prototype.initialize.call(this, options);
     this.setEndpoint((options || {}).endpoint, options);
   },
 
@@ -17,7 +17,7 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
     request.addListener('build', this.computeContentMd5);
     request.addListener('build', this.computeSha256);
     request.removeListener('validate',
-      AWS.EventListeners.Core.VALIDATE_REGION);
+      window.AWS.EventListeners.Core.VALIDATE_REGION);
     request.addListener('extractError', this.extractError);
     request.addListener('extractData', this.extractData);
   },
@@ -47,7 +47,7 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
     if (!httpRequest.headers['Content-Type']) { // always have a Content-Type
       httpRequest.headers['Content-Type'] = 'application/octet-stream';
     }
-    if (AWS.util.isBrowser() && navigator.userAgent.match(/Firefox/)) {
+    if (window.AWS.util.isBrowser() && navigator.userAgent.match(/Firefox/)) {
       if (!httpRequest.headers['Content-Type'].match(/;/)) {
         var charset = '; charset=UTF-8';
         httpRequest.headers['Content-Type'] += charset;
@@ -75,7 +75,7 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
 
     var rules = req.service.api.operations[req.operation].input.members;
 
-    if (req.service.getSignerClass(req) === AWS.Signers.V4) {
+    if (req.service.getSignerClass(req) === window.AWS.Signers.V4) {
       if (rules.ContentMD5 && !rules.ContentMD5.required) return false;
     }
 
@@ -85,15 +85,15 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
 
   computeContentMd5: function computeContentMd5(req) {
     if (req.service.willComputeChecksums(req)) {
-      var md5 = AWS.util.crypto.md5(req.httpRequest.body, 'base64');
+      var md5 = window.AWS.util.crypto.md5(req.httpRequest.body, 'base64');
       req.httpRequest.headers['Content-MD5'] = md5;
     }
   },
 
   computeSha256: function computeSha256(req) {
-    if (req.service.getSignerClass(req) === AWS.Signers.V4) {
+    if (req.service.getSignerClass(req) === window.AWS.Signers.V4) {
       req.httpRequest.headers['X-Amz-Content-Sha256'] =
-        AWS.util.crypto.sha256(req.httpRequest.body || '', 'hex');
+        window.AWS.util.crypto.sha256(req.httpRequest.body || '', 'hex');
     }
   },
 
@@ -119,7 +119,7 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
 
 
   escapePathParam: function escapePathParam(value) {
-    return AWS.util.uriEscapePath(String(value));
+    return window.AWS.util.uriEscapePath(String(value));
   },
 
 
@@ -139,7 +139,7 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
         error.statusCode === 200) {
       return true;
     } else {
-      var _super = AWS.Service.prototype.retryableError;
+      var _super = window.AWS.Service.prototype.retryableError;
       return _super.call(this, error, request);
     }
   },
@@ -169,13 +169,13 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
     var code = resp.httpResponse.statusCode;
     var body = resp.httpResponse.body;
     if (codes[code] && body.length === 0) {
-      resp.error = AWS.util.error(new Error(), {
+      resp.error = window.AWS.util.error(new Error(), {
         code: codes[resp.httpResponse.statusCode],
         message: null
       });
     } else {
-      var data = new AWS.XML.Parser({}).parse(body.toString());
-      resp.error = AWS.util.error(new Error(), {
+      var data = new window.AWS.XML.Parser({}).parse(body.toString());
+      resp.error = window.AWS.util.error(new Error(), {
         code: data.Code || code,
         message: data.Message || null
       });
@@ -185,14 +185,14 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
 
   setEndpoint: function setEndpoint(endpoint) {
     if (endpoint) {
-      this.endpoint = new AWS.Endpoint(endpoint, this.config);
+      this.endpoint = new window.AWS.Endpoint(endpoint, this.config);
     } else if (this.config.region && this.config.region !== 'us-east-1') {
       var sep = '-';
       if (this.isRegionV4()) sep = '.';
       var hostname = 's3' + sep + this.config.region + this.endpointSuffix();
-      this.endpoint = new AWS.Endpoint(hostname);
+      this.endpoint = new window.AWS.Endpoint(hostname);
     } else {
-      this.endpoint = new AWS.Endpoint(this.api.globalEndpoint, this.config);
+      this.endpoint = new window.AWS.Endpoint(this.api.globalEndpoint, this.config);
     }
   },
 
@@ -210,13 +210,13 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
       delete request.httpRequest.headers['User-Agent'];
       delete request.httpRequest.headers['X-Amz-User-Agent'];
       request.httpRequest.headers[expiresHeader] = parseInt(
-        AWS.util.date.unixTimestamp() + expires, 10).toString();
+        window.AWS.util.date.unixTimestamp() + expires, 10).toString();
     }
 
     function signedUrlSigner() {
       var queryParams = {};
 
-      AWS.util.each(request.httpRequest.headers, function (key, value) {
+      window.AWS.util.each(request.httpRequest.headers, function (key, value) {
         if (key === expiresHeader) key = 'Expires';
         queryParams[key] = value;
       });
@@ -230,7 +230,7 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
 
       var endpoint = request.httpRequest.endpoint;
       var parsedUrl = url.parse(request.httpRequest.path);
-      var querystring = AWS.util.queryParamsToString(queryParams);
+      var querystring = window.AWS.util.queryParamsToString(queryParams);
       endpoint.pathname = parsedUrl.pathname;
       endpoint.search = !parsedUrl.search ? querystring :
                         parsedUrl.search + '&' + querystring;
@@ -244,12 +244,12 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
     }
 
     if (callback) {
-      request.emitEvents(events, new AWS.Response(request), function (err) {
+      request.emitEvents(events, new window.AWS.Response(request), function (err) {
         if (err) callback(err, null);
         else callback(null, url.format(request.httpRequest.endpoint));
       });
     } else {
-      AWS.util.arrayEach(events, function (item) {
+      window.AWS.util.arrayEach(events, function (item) {
         request.emitEvent(item, [request]);
       });
       return url.format(request.httpRequest.endpoint);
@@ -257,7 +257,7 @@ AWS.S3 = AWS.Service.defineService('s3', ['2006-03-01'], {
   }
 });
 
-AWS.S3.prototype.createBucket = function createBucket(params, callback) {
+window.AWS.S3.prototype.createBucket = function createBucket(params, callback) {
   if (!params) params = {};
   var hostname = this.endpoint.hostname;
   if (hostname != this.api.globalEndpoint && !params.CreateBucketConfiguration) {

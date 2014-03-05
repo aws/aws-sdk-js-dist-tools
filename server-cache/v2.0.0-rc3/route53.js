@@ -2,7 +2,7 @@
 
 
 
-AWS.Route53 = AWS.Service.defineService('route53', ['2012-12-12'], {
+window.AWS.Route53 = window.AWS.Service.defineService('route53', ['2012-12-12'], {
 
   setupRequestListeners: function setupRequestListeners(request) {
     request.on('build', this.sanitizeUrl);
@@ -17,10 +17,10 @@ AWS.Route53 = AWS.Service.defineService('route53', ['2012-12-12'], {
 
   setEndpoint: function setEndpoint(endpoint) {
     if (endpoint) {
-      AWS.Service.prototype.setEndpoint(endpoint);
+      window.AWS.Service.prototype.setEndpoint(endpoint);
     } else {
       var opts = {sslEnabled: true}; // SSL is always enabled for Route53
-      this.endpoint = new AWS.Endpoint(this.api.globalEndpoint, opts);
+      this.endpoint = new window.AWS.Endpoint(this.api.globalEndpoint, opts);
     }
   }
 });

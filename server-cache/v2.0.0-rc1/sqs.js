@@ -2,7 +2,7 @@
 
 
 
-AWS.SQS = AWS.Service.defineService('sqs', ['2012-11-05'], {
+window.AWS.SQS = window.AWS.Service.defineService('sqs', ['2012-11-05'], {
   setupRequestListeners: function setupRequestListeners(request) {
     request.addListener('build', this.buildEndpoint);
 
@@ -38,10 +38,10 @@ AWS.SQS = AWS.Service.defineService('sqs', ['2012-11-05'], {
     var entries = {};
     var errors = [];
     var messageIds = [];
-    AWS.util.arrayEach(response.data.Successful, function (entry) {
+    window.AWS.util.arrayEach(response.data.Successful, function (entry) {
       entries[entry.Id] = entry;
     });
-    AWS.util.arrayEach(this.params.Entries, function (entry) {
+    window.AWS.util.arrayEach(this.params.Entries, function (entry) {
       if (entries[entry.Id]) {
         var md5 = entries[entry.Id].MD5OfMessageBody;
         var body = entry.MessageBody;
@@ -63,7 +63,7 @@ AWS.SQS = AWS.Service.defineService('sqs', ['2012-11-05'], {
 
     var service = this.service;
     var messageIds = [];
-    AWS.util.arrayEach(response.data.Messages, function(message) {
+    window.AWS.util.arrayEach(response.data.Messages, function(message) {
       var md5 = message.MD5OfBody;
       var body = message.Body;
       if (!service.isChecksumValid(md5, body)) {
@@ -78,7 +78,7 @@ AWS.SQS = AWS.Service.defineService('sqs', ['2012-11-05'], {
   },
 
   throwInvalidChecksumError: function throwInvalidChecksumError(response, ids, message) {
-    response.error = AWS.util.error(new Error(), {
+    response.error = window.AWS.util.error(new Error(), {
       retryable: true,
       code: 'InvalidChecksum',
       messageIds: ids,
@@ -92,13 +92,13 @@ AWS.SQS = AWS.Service.defineService('sqs', ['2012-11-05'], {
   },
 
   calculateChecksum: function calculateChecksum(data) {
-    return AWS.util.crypto.md5(data, 'hex');
+    return window.AWS.util.crypto.md5(data, 'hex');
   },
 
   buildEndpoint: function buildEndpoint(request) {
     var url = request.httpRequest.params.QueueUrl;
     if (url) {
-      request.httpRequest.endpoint = new AWS.Endpoint(url);
+      request.httpRequest.endpoint = new window.AWS.Endpoint(url);
 
 
       var matches = request.httpRequest.endpoint.host.match(/^sqs\.(.+?)\./);
