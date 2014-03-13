@@ -10,8 +10,8 @@ evalCode = (code, preamble) ->
   """
 
 AWS = null
-if fs.existsSync(__dirname + '/../../lib/aws.js')
-  AWS = require('../../lib/aws')
+if fs.existsSync(__dirname + '/../../../lib/aws.js')
+  AWS = require('../../../lib/aws')
 else
   AWS = require(__dirname + '/../node_modules/aws-sdk/lib/aws')
 

@@ -28,8 +28,8 @@ Builder.prototype.setDefaultOptions = function(options) {
 };
 
 Builder.prototype.getRootPath = function() {
-  if (fs.existsSync(__dirname + '/../lib/aws.js')) {
-    return __dirname + '/../';
+  if (fs.existsSync(__dirname + '/../../lib/aws.js')) {
+    return __dirname + '/../../';
   } else {
     return __dirname + '/node_modules/aws-sdk';
   }
