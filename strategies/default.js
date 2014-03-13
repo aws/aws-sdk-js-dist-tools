@@ -9,7 +9,7 @@ function DefaultStrategy(builder) {
   this.minifyOptions = this.builder.options.minifyOptions || {};
   this.minifyOptions.fromString = true;
   this.AWS = require(this.libPath + '/lib/aws');
-  this.apis = require(this.libPath + '/node_modules/aws-sdk-apis/index');
+  this.apis = require('aws-sdk-apis');
   this.license = [
     '// AWS SDK for JavaScript v' + this.AWS.VERSION,
     '// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.',

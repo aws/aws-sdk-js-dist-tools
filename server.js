@@ -76,7 +76,7 @@ app.init = function() {
     });
   }
   if (process.env.USE_MASTER) {
-    versions['latest'] = { libPath: __dirname + '/../' };
+    versions['latest'] = { libPath: __dirname + '/../../' };
   }
   app.set('versions', versions);
 }

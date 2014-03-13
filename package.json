@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "aws-sdk": "2.x",
+    "aws-sdk-apis": "2.x",
     "browserify": "3.x",
     "uglify-js": "2.x",
     "express": "3.x"
