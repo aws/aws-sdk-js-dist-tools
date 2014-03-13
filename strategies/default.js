@@ -9,6 +9,7 @@ function DefaultStrategy(builder) {
   this.minifyOptions = this.builder.options.minifyOptions || {};
   this.minifyOptions.fromString = true;
   this.AWS = require(this.libPath + '/lib/aws');
+  this.apis = require(this.libPath + '/node_modules/aws-sdk-apis/index');
   this.license = [
     '// AWS SDK for JavaScript v' + this.AWS.VERSION,
     '// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.',
@@ -66,14 +67,6 @@ DefaultStrategy.prototype.stripComments = function(code) {
   return newCode;
 };
 
-DefaultStrategy.prototype.className = function(api) {
-  var name = api.serviceAbbreviation || api.serviceFullName;
-  name = name.replace(/^Amazon|AWS\s*|\(.*|\s+|\W+/g, '');
-  if (name === 'ElasticLoadBalancing') name = 'ELB';
-  else if (name === 'SWF') name = 'SimpleWorkflow';
-  return name;
-};
-
 DefaultStrategy.prototype.getServiceHeader = function(service) {
   if (service === 'all') {
     return Object.keys(this.serviceClasses).map(function(service) {
@@ -81,16 +74,20 @@ DefaultStrategy.prototype.getServiceHeader = function(service) {
     }.bind(this)).join('\n');
   }
 
+  var file = util.format(
+    'window.AWS.%s = window.AWS.Service.defineService(\'%s\');\n',
+    this.apis.serviceName(service), service);
   var svcPath = this.libPath + '/lib/services/' + service + '.js';
-  if (!fs.existsSync(svcPath)) return null;
+  if (fs.existsSync(svcPath)) {
+    var lines = fs.readFileSync(svcPath).toString().split(/\r?\n/);
+    file += lines.map(function (line) {
+      line = line.replace(/^var\s*.*\s*=\s*require\s*\(.+\).*/, '');
+      line = line.replace(/^module.exports\s*=.*/, '');
+      line = line.replace(/\bAWS\b/g, 'window.AWS');
+      return line;
+    }).join('\n');
+  }
 
-  var lines = fs.readFileSync(svcPath).toString().split(/\r?\n/);
-  var file = lines.map(function (line) {
-    line = line.replace(/^var\s*.*\s*=\s*require\s*\(.+\).*/, '');
-    line = line.replace(/^module.exports\s*=.*/, '');
-    line = line.replace(/\bAWS\b/g, 'window.AWS');
-    return line;
-  }).join('\n');
   if (this.isMinified) file = this.minify(file);
   else file = this.stripComments(file);
 
@@ -131,7 +128,7 @@ DefaultStrategy.prototype.getService = function(service, version) {
 
   var line = util.format(
     'window.AWS.Service.defineServiceApi(window.AWS.%s, "%s", %s);',
-    this.className(svc.api), svc.api.apiVersion, JSON.stringify(svc.api));
+    this.apis.serviceName(service), svc.api.apiVersion, JSON.stringify(svc.api));
 
   if (this.isCached) {
     fs.writeFileSync(this.builder.cachePath(service + '-' + version), line);
