@@ -83,7 +83,7 @@ DefaultStrategy.prototype.getServiceHeader = function(service) {
     file += lines.map(function (line) {
       line = line.replace(/^var\s*.*\s*=\s*require\s*\(.+\).*/, '');
       line = line.replace(/^module.exports\s*=.*/, '');
-      line = line.replace(/\bAWS\b/g, 'window.AWS');
+      line = line.replace(/\bAWS\./g, 'window.AWS.');
       return line;
     }).join('\n');
   }
