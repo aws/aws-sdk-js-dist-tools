@@ -1,5 +1,6 @@
 var fs = require('fs');
 var util = require('util');
+var path = require('path');
 
 function DefaultStrategy(builder) {
   this.builder = builder;
@@ -138,9 +139,13 @@ DefaultStrategy.prototype.getService = function(service, version) {
 };
 
 DefaultStrategy.prototype.getCore = function(callback) {
+  var img = require('browserify/node_modules/insert-module-globals');
+  img.vars.process = function() { return '{browser:true}'; };
+
   var browserify = require('browserify');
-  var browserFile = this.libPath + '/lib/browser.js';
-  browserify(browserFile).ignore('domain').bundle(function (err, data) {
+  var opts = { basedir: this.libPath };
+  browserify(opts).add('./lib/browser').
+      ignore('domain').bundle(function (err, data) {
     if (err) return callback(err);
 
     var code = (data || '').toString();
