@@ -17,10 +17,13 @@
     "chai": "*",
     "coffee-script": "1.6.x",
     "supertest": "*",
-    "istanbul": "*"
+    "istanbul": "*",
+    "eslint": "*"
   },
   "scripts" : {
-    "test": "mocha --compilers coffee:coffee-script -s 1000 -t 10000",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --compilers coffee:coffee-script -s 1000 -t 10000"
+    "test": "npm run-script lint && npm run-script unit",
+    "unit": "mocha --compilers coffee:coffee-script -s 1000 -t 10000",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --compilers coffee:coffee-script -s 1000 -t 10000",
+    "lint": "eslint *.js strategies"
   }
 }
