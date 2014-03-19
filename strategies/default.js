@@ -122,7 +122,8 @@ DefaultStrategy.prototype.getService = function(service, version) {
   }
 
   try {
-    svc = new this.serviceClasses[service]({apiVersion: version});
+    var ClassName = this.serviceClasses[service];
+    svc = new ClassName({apiVersion: version});
   } catch (e) {
     return null;
   }

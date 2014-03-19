@@ -77,7 +77,7 @@ app.init = function() {
     });
   }
   if (process.env.USE_MASTER) {
-    versions['latest'] = { libPath: path.join(__dirname, '..', '..') };
+    versions.latest = { libPath: path.join(__dirname, '..', '..') };
   }
   app.set('versions', versions);
 };
