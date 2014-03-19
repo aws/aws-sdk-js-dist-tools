@@ -3,6 +3,7 @@
 var url = require('url');
 var domain = require('domain');
 var fs = require('fs');
+var path = require('path');
 var express = require('express');
 
 var Builder = require('./browser-builder');
@@ -19,7 +20,7 @@ function domainHandler(request, response, callback) {
     response.writeHead(400, err.message, {'content-type': 'text/plain'});
     response.end(err.message);
   }).run(function() {
-    try { callback(dom) } catch (e) { dom.emit('error', e); }
+    try { callback(dom); } catch (e) { dom.emit('error', e); }
   });
 }
 
@@ -69,17 +70,17 @@ app.init = function() {
   app.set('cache', process.env.NO_CACHE ? false : true);
 
   var versions = {};
-  var cacheDir = __dirname + '/server-cache';
+  var cacheDir = path.join(__dirname, 'server-cache');
   if (app.get('cache') && fs.existsSync(cacheDir)) {
     fs.readdirSync(cacheDir).forEach(function(version) {
-      versions[version] = { cacheRoot: cacheDir + '/' + version };
+      versions[version] = { cacheRoot: path.join(cacheDir, version) };
     });
   }
   if (process.env.USE_MASTER) {
-    versions['latest'] = { libPath: __dirname + '/../../' };
+    versions['latest'] = { libPath: path.join(__dirname, '..', '..') };
   }
   app.set('versions', versions);
-}
+};
 
 module.exports = app;
 
@@ -88,7 +89,7 @@ if (require.main === module) {
   app.init();
   app.listen(port);
 
-  var versions = Object.keys(app.get('versions')).join(', ');
+  var versionList = Object.keys(app.get('versions')).join(', ');
   console.log('* AWS SDK builder listening on http://localhost:' + port);
-  console.log('* Serving versions: ' + versions);
+  console.log('* Serving versions: ' + versionList);
 }

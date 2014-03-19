@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
+var path = require('path');
 
 var CacheStrategy = require('./strategies/cache');
 var DefaultStrategy = require('./strategies/default');
@@ -20,7 +21,7 @@ Builder.prototype.setDefaultOptions = function(options) {
   this.options = options || {};
   this.options.libPath = this.options.libPath || this.getRootPath();
   this.options.cacheRoot = this.options.cacheRoot ||
-    this.options.libPath + '/dist-tools/cache';
+    path.join(this.options.libPath, 'dist-tools', 'cache');
   this.options.cache = this.options.cache || false;
   this.options.writeCache = this.options.writeCache || false;
   this.options.minify = this.options.minify || false;
@@ -28,10 +29,10 @@ Builder.prototype.setDefaultOptions = function(options) {
 };
 
 Builder.prototype.getRootPath = function() {
-  if (fs.existsSync(__dirname + '/../../lib/aws.js')) {
-    return __dirname + '/../../';
+  if (fs.existsSync(path.join(__dirname, '..', '..', 'lib', 'aws.js'))) {
+    return path.join(__dirname, '..', '..');
   } else {
-    return __dirname + '/node_modules/aws-sdk';
+    return path.join(__dirname, 'node_modules', 'aws-sdk');
   }
 };
 
@@ -52,14 +53,15 @@ Builder.prototype.buildService = function(name, usingDefaultServices) {
   var match = name.match(/^(.+?)(?:-(.+?))?$/);
   var service = match[1], version = match[2] || 'latest';
   var contents = [];
+  var lines, err;
 
   if (!this.builtServices[service]) {
     this.builtServices[service] = {};
 
-    var lines = this.buildStrategy.getServiceHeader(service);
+    lines = this.buildStrategy.getServiceHeader(service);
     if (lines === null) {
       if (!usingDefaultServices) {
-        var err = new Error('Invalid module: ' + service);
+        err = new Error('Invalid module: ' + service);
         err.name = 'InvalidModuleError';
         throw err;
       }
@@ -71,10 +73,10 @@ Builder.prototype.buildService = function(name, usingDefaultServices) {
   if (!this.builtServices[service][version]) {
     this.builtServices[service][version] = true;
 
-    var lines = this.buildStrategy.getService(service, version);
+    lines = this.buildStrategy.getService(service, version);
     if (lines === null) {
       if (!usingDefaultServices) {
-        var err = new Error('Invalid module: ' + service + '-' + version);
+        err = new Error('Invalid module: ' + service + '-' + version);
         err.name = 'InvalidModuleError';
         throw err;
       }

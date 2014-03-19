@@ -42,7 +42,7 @@ DefaultStrategy.prototype.stripComments = function(code) {
   var lines = code.split(/\r?\n/);
   var multiLine = false;
   lines = lines.map(function (line) {
-    rLine = line;
+    var rLine = line;
     if (line.match(/^\s*\/\//)) {
       rLine = null;
     } else if (line.match(/^\s*\/\*/)) {
@@ -61,7 +61,7 @@ DefaultStrategy.prototype.stripComments = function(code) {
     }
 
     return rLine;
-  }).filter(function(l) { return l != null; });
+  }).filter(function(l) { return l !== null; });
 
   var newCode = lines.join('\n');
   newCode = newCode.replace(/\/\*\*[\s\S]+?Copyright\s+.+?Amazon[\s\S]+?\*\//g, '');
@@ -122,7 +122,7 @@ DefaultStrategy.prototype.getService = function(service, version) {
   }
 
   try {
-    var svc = new this.serviceClasses[service]({apiVersion: version});
+    svc = new this.serviceClasses[service]({apiVersion: version});
   } catch (e) {
     return null;
   }
