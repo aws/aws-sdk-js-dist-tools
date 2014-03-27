@@ -16,7 +16,7 @@
     "mocha": "*",
     "chai": "*",
     "coffee-script": "1.6.x",
-    "supertest": "*",
+    "supertest": "0.9.0",
     "istanbul": "*",
     "eslint": "*"
   },
