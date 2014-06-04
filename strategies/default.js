@@ -76,7 +76,7 @@ DefaultStrategy.prototype.getServiceHeader = function(service) {
   }
 
   var file = util.format(
-    'window.AWS.%s = window.AWS.Service.defineService(\'%s\');\n',
+    'AWS.%s = AWS.Service.defineService(\'%s\');\n',
     this.apis.serviceName(service), service);
   var svcPath = this.libPath + '/lib/services/' + service + '.js';
   if (fs.existsSync(svcPath)) {
@@ -84,7 +84,6 @@ DefaultStrategy.prototype.getServiceHeader = function(service) {
     file += lines.map(function (line) {
       line = line.replace(/^var\s*.*\s*=\s*require\s*\(.+\).*/, '');
       line = line.replace(/^module.exports\s*=.*/, '');
-      line = line.replace(/\bAWS\./g, 'window.AWS.');
       return line;
     }).join('\n');
   }
@@ -116,7 +115,7 @@ DefaultStrategy.prototype.getService = function(service, version) {
     }.bind(this)).join('\n');
   }
 
-  var svc;
+  var svc, api;
   if (!this.serviceClasses[service]) {
     return null;
   }
@@ -124,13 +123,14 @@ DefaultStrategy.prototype.getService = function(service, version) {
   try {
     var ClassName = this.serviceClasses[service];
     svc = new ClassName({apiVersion: version});
+    api = this.apis.load(service, svc.api.apiVersion);
   } catch (e) {
     return null;
   }
 
   var line = util.format(
-    'window.AWS.Service.defineServiceApi(window.AWS.%s, "%s", %s);',
-    this.apis.serviceName(service), svc.api.apiVersion, JSON.stringify(svc.api));
+    'AWS.Service.defineServiceApi(AWS.%s, "%s", %s);',
+    this.apis.serviceName(service), svc.api.apiVersion, JSON.stringify(api));
 
   if (this.isCached) {
     fs.writeFileSync(this.builder.cachePath(service + '-' + version), line);
