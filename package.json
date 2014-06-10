@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "aws-sdk": "git://github.com/aws/aws-sdk-js",
-    "aws-sdk-apis": "2.x",
+    "aws-sdk": "git://github.com/aws/aws-sdk-js#v2.0.0-rc.19",
+    "aws-sdk-apis": "2.0.13",
     "browserify": "3.x",
     "uglify-js": "2.x",
     "express": "3.x"
