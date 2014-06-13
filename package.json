@@ -16,8 +16,7 @@
     "chai": "*",
     "coffee-script": "1.6.x",
     "supertest": "0.9.0",
-    "istanbul": "*",
-    "eslint": "*"
+    "istanbul": "*"
   },
   "scripts" : {
     "test": "npm -s run-script unit",
