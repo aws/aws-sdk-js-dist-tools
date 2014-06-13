@@ -1,7 +1,7 @@
 fs = require('fs')
 request = require('supertest')
 app = require('../server')
-helpers = require('./helpers')
+helpers = require('aws-sdk/dist-tools/test/helpers')
 spawn = require('child_process').spawn
 http = require('http')
 expect = helpers.chai.expect

@@ -5,8 +5,10 @@ var domain = require('domain');
 var fs = require('fs');
 var path = require('path');
 var express = require('express');
+var compression = require('compression');
+var logging = require('morgan');
 
-var Builder = require('./browser-builder');
+var Builder = require('aws-sdk/dist-tools/browser-builder');
 
 var port = process.argv[2] || process.env.PORT;
 if (!port && __dirname.match(/\/srv\//)) port = 80;
@@ -59,10 +61,9 @@ function buildSDK(request, response) {
 }
 
 var app = express();
-app.use(express.compress());
-app.use(express.favicon());
+app.use(compression());
 if (require.main === module) {
-  app.use(express.logger()); // enable logging only for executable
+  app.use(logging()); // enable logging only for executable
 }
 app.get(/^\/aws-sdk-(v\d.+?|latest)(\.min)?\.js$/, buildSDK);
 

@@ -7,7 +7,7 @@ var exec = require('child_process').exec;
 var async = require('async');
 var https = require('https');
 
-var Builder = require('./browser-builder');
+var Builder = require('aws-sdk/dist-tools/browser-builder');
 
 function buildVersion(done) {
   if (!this.writeCache) return done();
